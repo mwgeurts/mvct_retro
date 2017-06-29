@@ -74,11 +74,11 @@ end
 if bone
     
     % Note use of bony anatomy to event log
-    Event('Merging reference and daily images using bony anatomy');
+    Event('Registering reference and daily images using bony anatomy');
 else
     
     % Note use of full image to event log
-    Event('Merging reference and daily images using full image');
+    Event('Registering reference and daily images using full image');
 end
 
 % Start timer
@@ -94,7 +94,7 @@ reference.data = interp1(daily.ivdt(:,2), daily.ivdt(:,1), ...
 
 % Note conversion in log
 Event(['Reference image converted to daily-equivalent Hounsfield ', ...
-    ' Units using IVDT']);
+    'Units using IVDT']);
 
 % Execute registration based on method variable
 switch method
@@ -486,7 +486,13 @@ case 'PLASTIMATCH'
     % Clear temporary variables
     clear flag1 flag2 origin;
     
-    % Report registration adjustments.  Note angles are stored in radians
+    % Permute registration back to IEC coordinates
+    rigid = rigid([1 2 3 4 6 5]);
+    
+    % Convert rotations to degrees
+    rigid(1:3) = rad2deg(rigid(1:3));
+    
+    % Report registration adjustments
     Event(sprintf(['Rigid registration matrix [pitch yaw roll x y z] ', ...
         'computed as [%E %E %E %E %E %E] in %0.3f seconds'], rigid, toc(t)));
      
@@ -595,15 +601,18 @@ case 'MATLAB'
             'ERROR');
     end
     
+    % Convert to degrees
+    rigid(1:3) = rad2deg(rigid(1:3));
+    
     % Set x, y, and z values
-    rigid(4) = tform.T(4,2);
+    rigid(4) = tform.T(4,1);
     rigid(5) = tform.T(4,3);
-    rigid(6) = tform.T(4,1);
+    rigid(6) = tform.T(4,2);
     
     % Clear transformation array
     clear tform;
     
-    % Report registration adjustments.  Note angles are stored in radians
+    % Report registration adjustments
     Event(sprintf(['Rigid registration matrix [pitch yaw roll x y z] ', ...
         'computed as [%E %E %E %E %E %E] in %0.3f seconds'], ...
         rigid, toc(t)));

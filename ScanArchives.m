@@ -21,17 +21,17 @@ function ScanArchives()
 %   {4}:  MVCT UID
 %   {5}:  Plan Name
 %   {6}:  Scan Length (cm)
-%   {7}:  User Registered Pitch (radians)
-%   {8}:  User Registered Yaw (radians)
-%   {9}:  User Registered Roll (radians)
+%   {7}:  User Registered Pitch (degrees)
+%   {8}:  User Registered Yaw (degrees)
+%   {9}:  User Registered Roll (degrees)
 %   {10}: User Registered X Translation (cm)
 %   {11}: User Registered Y Translation (cm)
 %   {12}: User Registered Z Translation (cm)
 %   {13}: Tool Version
 %   {14}: Registration Method, if provided
-%   {15}: Re-Registered Pitch (radians)
-%   {16}: Re-Registered Yaw (radians)
-%   {17}: Re-Registered Roll (radians)
+%   {15}: Re-Registered Pitch (degrees)
+%   {16}: Re-Registered Yaw (degrees)
+%   {17}: Re-Registered Roll (degrees)
 %   {18}: Re-Registered X Translation (cm)
 %   {19}: Re-Registered Y Translation (cm)
 %   {20}: Re-Registered Z Translation (cm)
@@ -152,7 +152,7 @@ while i < size(folderList, 1)
     elseif folderList(i).isdir == 1
         
         % Retrieve the subfolder contents
-        subFolderList = dir(fullfile(config.AUTO_INPUT_DIR, ...
+        subFolderList = dir(fullfile(config.ARCHIVE_PATH, ...
             folderList(i).name));
         
         % Randomize order of subfolder list
@@ -188,10 +188,10 @@ while i < size(folderList, 1)
         % (provided as part of this repository)
         if ispc
             [~, cmdout] = system(['sha1sum "', ...
-                fullfile(config.AUTO_INPUT_DIR, folderList(i).name), '"']);
+                fullfile(config.ARCHIVE_PATH, folderList(i).name), '"']);
         else
             [~, cmdout] = system(['shasum "', ...
-                fullfile(config.AUTO_INPUT_DIR, folderList(i).name), '"']);
+                fullfile(config.ARCHIVE_PATH, folderList(i).name), '"']);
         end
         
         % Save just the 40-character signature
@@ -206,7 +206,7 @@ while i < size(folderList, 1)
 
         % Generate separate path and name variables for XML
         [path, name, ext] = ...
-            fileparts(fullfile(config.AUTO_INPUT_DIR, folderList(i).name));
+            fileparts(fullfile(config.ARCHIVE_PATH, folderList(i).name));
         name = strcat(name, ext);
         
         % Clear temporary variable
@@ -307,7 +307,7 @@ while i < size(folderList, 1)
                     
                     % If a similarity metric is set
                     if isfield(config, 'SIMILARITY_METRIC')
-
+                        
                         % Convert reference image to equivalent daily-IVDT 
                         % image
                         r = interp1(daily.ivdt(:,2), daily.ivdt(:,1), ...
@@ -324,6 +324,9 @@ while i < size(folderList, 1)
                         % MVCT
                         s = find(sum(sum(m.mask, 1), 2));
                         
+                        % Log action
+                        Event('Computing similarity metrics');
+                        
                         % Calculate image similarity metric
                         switch config.SIMILARITY_METRIC
                             
@@ -334,14 +337,24 @@ while i < size(folderList, 1)
                                 daily.user_similarity = ...
                                     ssim(r(:,:,min(s):max(s)), ...
                                     m.data(:,:,min(s):max(s)));
+                                
+                                % Log result
+                                Event(sprintf(['User registration structural', ...
+                                    ' simiarlity index = %f'], ...
+                                    daily.user_similarity));
                             
                             % Mean square error
                             case 'MSE'
 
-                                % Compute the SSI on only the masked slices
+                                % Compute the MSE on only the masked slices
                                 daily.user_similarity = ...
                                     immse(r(:,:,min(s):max(s)), ...
                                     m.data(:,:,min(s):max(s)));
+                                
+                                % Log result
+                                Event(sprintf(['User registration mean', ...
+                                    ' square error = %f'], ...
+                                    daily.user_similarity));
                         end
                         
                         % If re-registration data does exists
@@ -356,6 +369,9 @@ while i < size(folderList, 1)
                             % MVCT
                             s = find(sum(sum(m.mask, 1), 2));
 
+                            % Log action
+                            Event('Computing similarity metrics');
+                            
                             % Calculate image similarity metric
                             switch config.SIMILARITY_METRIC
 
@@ -366,6 +382,11 @@ while i < size(folderList, 1)
                                     daily.re_similarity = ...
                                         ssim(r(:,:,min(s):max(s)), ...
                                         m.data(:,:,min(s):max(s)));
+                                    
+                                    % Log result
+                                    Event(sprintf(['Re-registration structural', ...
+                                        ' simiarlity index = %f'], ...
+                                        daily.re_similarity));
 
                                 % Mean square error
                                 case 'MSE'
@@ -374,6 +395,11 @@ while i < size(folderList, 1)
                                     daily.re_similarity = ...
                                         immse(r(:,:,min(s):max(s)), ...
                                         m.data(:,:,min(s):max(s)));
+                                    
+                                    % Log result
+                                    Event(sprintf(['Re-registration mean', ...
+                                        ' square error = %f'], ...
+                                        daily.re_similarity));
                             end
                         end
                         
@@ -412,14 +438,14 @@ while i < size(folderList, 1)
                         strrep(scans{j}.planName, ',', ' '));
 
                     % Write scan length in column 5
-                    fprintf(fid, '%0.1f,', sum(scans{j}.scanLengths));
+                    fprintf(fid, '%f,', sum(scans{j}.scanLengths(k,:)));
 
                     % Write user registration in columns 6-11
-                    fprintf(fid, '%0.3f,%0.3f,%0.3f,%0.3f,%0.3f,%0.3f,', ...
+                    fprintf(fid, '%f,%f,%f,%f,%f,%f,', ...
                         scans{j}.registration(k,:));
                     
-                     % Write version in column 12
-                    fprintf(fid, '%s\n', version);
+                    % Write version in column 12
+                    fprintf(fid, '%s', version);
                     
                     % If a new registration was performed
                     if isfield(daily, 'rigid')
@@ -429,7 +455,7 @@ while i < size(folderList, 1)
                             '_', config.REGISTRATION_METRIC]);
 
                         % Write new registration values in columns 14-19
-                        fprintf(fid, '%0.3f,%0.3f,%0.3f,%0.3f,%0.3f,%0.3f,', ...
+                        fprintf(fid, '%f,%f,%f,%f,%f,%f,', ...
                             daily.rigid);
                     end
                     
@@ -440,16 +466,19 @@ while i < size(folderList, 1)
                         fprintf(fid, '%s,', config.SIMILARITY_METRIC);
                         
                         % Write user metric in column 21
-                        fprintf(fid, '%0.1f,', daily.user_similarity);
+                        fprintf(fid, '%f,', daily.user_similarity);
                     end
 
                     % If a new similarity metric was calculated
-                    if isfield(merged, 're_similarity')
+                    if isfield(daily, 're_similarity')
                         
                         % Write user metric in column 22
-                        fprintf(fid, '%0.1f,', daily.re_similarity);
+                        fprintf(fid, '%f,', daily.re_similarity);
                     end
 
+                    % Write new line
+                    fprintf(fid, '\n');
+                    
                     % Close file handle
                     fclose(fid);
 

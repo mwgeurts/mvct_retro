@@ -47,7 +47,7 @@ else
     Event(['Generating new results file ', filename]);
     
     % Open write file handle to current results set
-    fid = fopen(config.AUTO_RESULTS_CSV, 'w');
+    fid = fopen(filename, 'w');
     
     % Print version information
     fprintf(fid, '# TomoTherapy MVCT Retrospective Analysis Tool\n');
@@ -67,7 +67,7 @@ else
     fprintf(fid, 'User_X,');
     fprintf(fid, 'User_Y,');
     fprintf(fid, 'User_Z,');
-    fprintf(fid, 'Version\n');
+    fprintf(fid, 'Version,');
     fprintf(fid, 'Reg_Method,');
     fprintf(fid, 'Reg_Pitch,');
     fprintf(fid, 'Reg_Yaw,');
@@ -77,7 +77,7 @@ else
     fprintf(fid, 'Reg_Z,');
     fprintf(fid, 'Similarity_Metric,');
     fprintf(fid, 'User_Similarity,');
-    fprintf(fid, 'Reg_Similarity,');
+    fprintf(fid, 'Reg_Similarity\n');
 
     % Close the file handle
     fclose(fid);
