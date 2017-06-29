@@ -1,0 +1,10 @@
+ARCHIVE_PATH            =   /path/to/archives
+RESULTS_CSV             =   ../results.csv
+ANON_RESULTS            =   0
+REGISTER_BONE           =   0
+REGISTRATION_METHOD     =   MATLAB
+REGISTRATION_METRIC     =   MI
+REGISTRATION_LEVELS     =   3
+REGISTRATION_ITER       =   30   
+SIMILARITY_METRIC       =   SSI
+

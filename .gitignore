@@ -1,0 +1,5 @@
+*.m~
+log.txt
+results.csv
+.DS_STORE
+*.asv
