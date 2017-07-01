@@ -13,7 +13,8 @@ function rigid = RegisterImages(reference, daily, varargin)
 %   daily:      structure containing the image data, dimensions, width,
 %               start coordinates and IVDT.  See LoadDailyImage.
 %
-% In addition, the following options may be provided as name/value pairs:
+% In addition, the following options may be provided as name/value pairs.
+% If not definedR, the registration will be MATLAB using MSE.
 %
 %   method:     string contianing the algorithm to use for registration.  
 %               Can be 'PLASTIMATCH' or 'MATLAB'
@@ -55,7 +56,7 @@ levels = 3;
 iterations = 30;
 
 % Loop through remaining input arguments
-for i = 3:2:length(varargin)
+for i = 1:2:length(varargin)
 
     if strcmpi(varargin{i}, 'method')
         method = varargin{i+1};
@@ -71,11 +72,12 @@ for i = 3:2:length(varargin)
 end
 
 % If the bone flag is set
-if bone
+if exist('Event', 'file') == 2 && bone
     
     % Note use of bony anatomy to event log
     Event('Registering reference and daily images using bony anatomy');
-else
+    
+elseif exist('Event', 'file') == 2    
     
     % Note use of full image to event log
     Event('Registering reference and daily images using full image');
@@ -85,7 +87,9 @@ end
 t = tic;
     
 % Log which registration method was chosen
-Event(['Method ', method, ' selected for registration']);
+if exist('Event', 'file') == 2  
+    Event(['Method ', method, ' selected for registration']);
+end
 
 % Convert reference image to equivalent daily-IVDT image
 reference.data = interp1(daily.ivdt(:,2), daily.ivdt(:,1), ...
@@ -93,8 +97,10 @@ reference.data = interp1(daily.ivdt(:,2), daily.ivdt(:,1), ...
     reference.data, 'linear', 'extrap'), 'linear', 'extrap');
 
 % Note conversion in log
-Event(['Reference image converted to daily-equivalent Hounsfield ', ...
-    'Units using IVDT']);
+if exist('Event', 'file') == 2  
+    Event(['Reference image converted to daily-equivalent Hounsfield ', ...
+        'Units using IVDT']);
+end
 
 % Execute registration based on method variable
 switch method
@@ -149,7 +155,9 @@ case 'PLASTIMATCH'
     clear fid;
     
     % Log where the reference file was saved
-    Event(['Reference image written to ', refFilename]);
+    if exist('Event', 'file') == 2  
+        Event(['Reference image written to ', refFilename]);
+    end
     
     %% Build mask for reference image (excluding outside MVCT FOV)
     % Initialize null array of the same size as the reference image
@@ -339,7 +347,9 @@ case 'PLASTIMATCH'
     clear fid;
     
     % Log where the daily mask file was saved
-    Event(['Daily mask image written to ', dailyMaskFilename]);
+    if exist('Event', 'file') == 2  
+        Event(['Daily mask image written to ', dailyMaskFilename]);
+    end
     
     %% Build plastimatch command file
     % Generate a temporary file name for the command file
@@ -411,8 +421,10 @@ case 'PLASTIMATCH'
     
     %% Run plastimatch
     % Log execution of system call
-    Event(['Executing plastimatch register ', commandFile]);
-
+    if exist('Event', 'file') == 2  
+        Event(['Executing plastimatch register ', commandFile]);
+    end
+    
     % Execute plastimatch using system call, saving the output and status
     [status, cmdout] = system(['plastimatch register ', commandFile]);
     
@@ -468,9 +480,15 @@ case 'PLASTIMATCH'
         
         % Log an error indicating the the results were not parsed
         % correctly.  This usually indicates the registration failed
-        Event(['Unable to parse plastimatch results from ', adjustments], ...
-            'ERROR'); 
-    else
+        if exist('Event', 'file') == 2  
+            Event(['Unable to parse plastimatch results from ', adjustments], ...
+                'ERROR'); 
+        else
+            error(['Unable to parse plastimatch results from ', adjustments]);
+        end
+        
+    elseif exist('Event', 'file') == 2 
+        
         % Otherwise, log success
         Event(['Plastimatch results read from ', adjustments]);
     end
@@ -479,23 +497,31 @@ case 'PLASTIMATCH'
     if ~isequal(origin, [0 0 0])
         
         % Log an error
-        Event(['Error: non-zero centers of rotation are not supported', ...
-            ' at this time'], 'ERROR'); 
+        if exist('Event', 'file') == 2 
+            Event(['Error: non-zero centers of rotation are not supported', ...
+                ' at this time'], 'ERROR'); 
+        else
+            error(['Error: non-zero centers of rotation are not supported', ...
+                ' at this time']);
+        end
     end
     
     % Clear temporary variables
     clear flag1 flag2 origin;
     
     % Permute registration back to IEC coordinates
-    rigid = rigid([1 2 3 4 6 5]);
+    rigid = -rigid([1 2 3 4 6 5]);
     
     % Convert rotations to degrees
     rigid(1:3) = rad2deg(rigid(1:3));
     
     % Report registration adjustments
-    Event(sprintf(['Rigid registration matrix [pitch yaw roll x y z] ', ...
-        'computed as [%E %E %E %E %E %E] in %0.3f seconds'], rigid, toc(t)));
-     
+    if exist('Event', 'file') == 2 
+        Event(sprintf(['Rigid registration matrix [pitch yaw roll x y z] ', ...
+            'computed as [%E %E %E %E %E %E] in %0.3f seconds'], ...
+            rigid, toc(t)));
+    end
+    
     % Clear temporary variables
     clear referenceFilename dailyFilename referenceMaskFilename ...
         dailyMaskFilename adjustments commandFile;
@@ -521,13 +547,13 @@ case 'MATLAB'
     %% Set fixed (reference) image and reference coordinates
     % Generate a reference meshgrid in the x, y, and z dimensions using the
     % start and width structure fields
-    Rfixed = imref3d(reference.dimensions, ...
-        [reference.start(1) reference.start(1) + ...
-        reference.width(1) * (reference.dimensions(1)-1)], ...
-        [reference.start(2) reference.start(2) + ...
-        reference.width(2) * (reference.dimensions(2)-1)], ...
-        [reference.start(3) reference.start(3) + ...
-        reference.width(3) * (reference.dimensions(3)-1)]);
+    Rfixed = imref3d(size(reference.data), [reference.start(2) ...
+        reference.start(2) + reference.width(2) * ...
+        (size(reference.data, 2) - 1)], [reference.start(1) ...
+        reference.start(1) + reference.width(1) * ...
+        (size(reference.data, 1) - 1)], [reference.start(3) ...
+        reference.start(3) + reference.width(3) * ...
+        (size(reference.data, 3) - 1)]);
     
     %% Set moving (daily) image and reference coordinates
     % If the bone flag is enabled
@@ -544,13 +570,11 @@ case 'MATLAB'
     
     % Generate a reference meshgrid in the x, y, and z dimensions using the
     % start and width structure fields
-    Rmoving = imref3d(daily.dimensions, ...
-        [daily.start(1) daily.start(1) + ...
-        daily.width(1) * (daily.dimensions(1)-1)], ...
-        [daily.start(2) daily.start(2) + ...
-        daily.width(2) * (daily.dimensions(2)-1)], ...
-        [daily.start(3) daily.start(3) + ...
-        daily.width(3) * (daily.dimensions(3)-1)]);
+    Rmoving = imref3d(size(daily.data), [daily.start(2) daily.start(2) + ...
+        daily.width(2) * (size(daily.data, 2) - 1)], [daily.start(1) ...
+        daily.start(1) + daily.width(1) * (size(daily.data, 1) - 1)], ...
+        [daily.start(3) daily.start(3) + daily.width(3) * ...
+        (size(daily.data, 3) - 1)]);
     
     %% Run rigid registration
     % Initialize Regular Step Gradient Descent MATLAB object
@@ -559,20 +583,37 @@ case 'MATLAB'
     % Set number of iterations to run
     optimizer.MaximumIterations = iterations;
     
+    % Set maximum step size
+    optimizer.MaximumStepLength = reference.width(1)/2;
+    
+    % Set minimum step size
+    optimizer.MinimumStepLength = reference.width(1)/1e9;
+    
+    % Set metric
     switch metric
+        
+        % If the user chose Mutual Information
         case 'MI'
             
             % Initialize Mattes Mutual Information metric MATLAB object
             metric = registration.metric.MattesMutualInformation;
 
             % Log start of optimization
-            Event('Executing imregtform rigid using Mattes mutual information');
+            if exist('Event', 'file') == 2 
+                Event(['Executing imregtform rigid using Mattes ', ...
+                    'mutual information']);
+            end
+            
+        % Default to Mean Square Error
         otherwise
+            
             % Initialize Mattes Mutual Information metric MATLAB object
             metric = registration.metric.MeanSquares;
 
             % Log start of optimization
-            Event('Executing imregtform rigid using mean square error');
+            if exist('Event', 'file') == 2 
+                Event('Executing imregtform rigid using mean square error');
+            end
     end
     
     % Execute imregtform using 3 resampling levels
@@ -585,42 +626,52 @@ case 'MATLAB'
     % Verify resulting transformation matrix is valid (the values (1,1) and
     % (3,3) must not be zero for atan2 to compute correctly)
     if tform.T(1,1) ~= 0 || tform.T(3,3) ~= 0
-        
-        % Compute yaw
-        rigid(2) = atan2(tform.T(1,2), tform.T(1,1));
-        
+
         % Compute pitch
-        rigid(1) = atan2(-tform.T(1,3), ...
+        rigid(1) = -atan2(-tform.T(1,3), ...
             sqrt(tform.T(2,3)^2 + tform.T(3,3)^2));
+                
+        % Compute yaw
+        rigid(2) = atan2(tform.T(2,3), tform.T(3,3));
         
         % Compute roll
-        rigid(3) = -atan2(tform.T(2,3), tform.T(3,3));
+        rigid(3) = -atan2(tform.T(1,2), tform.T(1,1));
     else
         % Otherwise, atan2 cannot compute, so throw an error
-        Event('Error: incompatible registration matrix determined', ...
-            'ERROR');
+        if exist('Event', 'file') == 2 
+            Event('Incompatible registration matrix determined', ...
+                'ERROR');
+        else
+            error('Incompatible registration matrix determined');
+        end
     end
     
     % Convert to degrees
     rigid(1:3) = rad2deg(rigid(1:3));
     
     % Set x, y, and z values
-    rigid(4) = tform.T(4,1);
-    rigid(5) = tform.T(4,3);
-    rigid(6) = tform.T(4,2);
+    rigid(4) = tform.T(4,2);
+    rigid(5) = -tform.T(4,3);
+    rigid(6) = -tform.T(4,1);
     
     % Clear transformation array
     clear tform;
     
     % Report registration adjustments
-    Event(sprintf(['Rigid registration matrix [pitch yaw roll x y z] ', ...
-        'computed as [%E %E %E %E %E %E] in %0.3f seconds'], ...
-        rigid, toc(t)));
+    if exist('Event', 'file') == 2 
+        Event(sprintf(['Rigid registration matrix [pitch yaw roll x y z] ', ...
+            'computed as [%E %E %E %E %E %E] in %0.3f seconds'], ...
+            rigid, toc(t)));
+    end
 
 % Otherwise, the method passed to RegisterImages was not supported    
 otherwise
     
     % Throw error
-    Event(['Unsupported method ', method, ' passed to RegisterImages'], ...
-        'ERROR');
+    if exist('Event', 'file') == 2 
+        Event(['Unsupported method ', method, ' passed to RegisterImages'], ...
+            'ERROR');
+    else
+        error(['Unsupported method ', method, ' passed to RegisterImages']);
+    end
 end
