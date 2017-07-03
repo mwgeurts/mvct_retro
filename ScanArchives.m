@@ -445,7 +445,7 @@ while i < size(folderList, 1)
                         scans{j}.registration(k,:));
                     
                     % Write version in column 12
-                    fprintf(fid, '%s', version);
+                    fprintf(fid, '%s,', version);
                     
                     % If a new registration was performed
                     if isfield(daily, 'rigid')
