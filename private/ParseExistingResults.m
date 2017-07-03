@@ -1,4 +1,4 @@
-function results = ParseExistingResults(filename)
+function results = ParseExistingResults(filename, config)
 % ParseExistingResults attempts to load an existing set of results into a
 % return variable. If not found, it will create an empty CSV file to begin
 % writing results to.
@@ -29,9 +29,26 @@ if fid > 0
     Event('Found results file');
     
     % Scan results .csv file for the following format of columns (see
-    % documentation above for the results file format)
-    results = textscan(fid, '%s %s %s %s %s %s %s %s %s %s %s %s %s %s', ...
-        'Delimiter', {','}, 'commentStyle', '#');
+    % documentation above for the results file format). Note that the
+    % format of this file varies depending on whether a registration method
+    % and/or similarity metric is specified
+    if isfield(config, 'REGISTRATION_METHOD') && ...
+            isfield(config, 'SIMILARITY_METRIC')
+        results = textscan(fid, ['%s %s %s %s %s %s %s %s %s %s %s %s %s ', ...
+            '%s %s %s %s %s %s %s %s %s'], ...
+            'Delimiter', {','}, 'commentStyle', '#');
+    elseif isfield(config, 'REGISTRATION_METHOD')
+        results = textscan(fid, ['%s %s %s %s %s %s %s %s %s %s %s %s %s ', ...
+            '%s %s %s %s %s %s'], ...
+            'Delimiter', {','}, 'commentStyle', '#');
+    elseif isfield(config, 'SIMILARITY_METRIC')
+        results = textscan(fid, ['%s %s %s %s %s %s %s %s %s %s %s %s %s ', ...
+            '%s'], ...
+            'Delimiter', {','}, 'commentStyle', '#');
+    else
+        results = textscan(fid, '%s %s %s %s %s %s %s %s %s %s %s %s', ...
+            'Delimiter', {','}, 'commentStyle', '#');
+    end
     
     % Close the file handle
     fclose(fid);
@@ -68,17 +85,32 @@ else
     fprintf(fid, 'User_Y,');
     fprintf(fid, 'User_Z,');
     fprintf(fid, 'Version,');
-    fprintf(fid, 'Reg_Method,');
-    fprintf(fid, 'Reg_Pitch,');
-    fprintf(fid, 'Reg_Yaw,');
-    fprintf(fid, 'Reg_Roll,');
-    fprintf(fid, 'Reg_X,');
-    fprintf(fid, 'Reg_Y,');
-    fprintf(fid, 'Reg_Z,');
-    fprintf(fid, 'Similarity_Metric,');
-    fprintf(fid, 'User_Similarity,');
-    fprintf(fid, 'Reg_Similarity\n');
-
+    
+    % If a registration method is set
+    if isfield(config, 'REGISTRATION_METHOD')
+        fprintf(fid, 'Reg_Method,');
+        fprintf(fid, 'Reg_Pitch,');
+        fprintf(fid, 'Reg_Yaw,');
+        fprintf(fid, 'Reg_Roll,');
+        fprintf(fid, 'Reg_X,');
+        fprintf(fid, 'Reg_Y,');
+        fprintf(fid, 'Reg_Z,');
+    end
+    
+    % If a similarity metric is set
+    if isfield(config, 'SIMILARITY_METRIC')
+        fprintf(fid, 'Similarity_Metric,');
+        fprintf(fid, 'User_Similarity,');
+        
+        % If a registration method is set
+        if isfield(config, 'REGISTRATION_METHOD')
+            fprintf(fid, 'Reg_Similarity');
+        end
+    end
+    
+    % Print new line
+    fprintf(fid, '\n');
+    
     % Close the file handle
     fclose(fid);
     
