@@ -438,7 +438,7 @@ while i < size(folderList, 1)
                         strrep(scans{j}.planName, ',', ' '));
 
                     % Write scan length in column 5
-                    fprintf(fid, '%f,', sum(abs(scans{j}.scanLengths(k,:))));
+                    fprintf(fid, '%f,', abs(diff(scans{j}.scanLengths(k,:))));
 
                     % Write user registration in columns 6-11
                     fprintf(fid, '%f,%f,%f,%f,%f,%f,', ...
