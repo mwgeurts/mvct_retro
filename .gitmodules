@@ -1,3 +1,6 @@
 [submodule "tomo_extract"]
 	path = tomo_extract
 	url = https://github.com/mwgeurts/tomo_extract
+[submodule "fusion_tools"]
+	path = fusion_tools
+	url = https://github.com/mwgeurts/fusion_tools

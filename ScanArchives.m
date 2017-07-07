@@ -109,6 +109,19 @@ if exist('FindMVCTScans', 'file') ~= 2
         'ERROR');
 end
 
+% Add fusion_tools submodule to search path
+addpath('./fusion_tools');
+
+% Check if MATLAB can find RigidRegister
+if exist('RigidRegister', 'file') ~= 2
+    
+    % If not, throw an error
+    Event(['The fusion_tools submodule does not exist in the ', ...
+        'search path. Use git clone --recursive or git submodule init ', ...
+        'followed by git submodule update to fetch all submodules'], ...
+        'ERROR');
+end
+
 % Load configuration settings
 config = ParseConfigOptions('config.txt');
 
@@ -297,7 +310,7 @@ while i < size(folderList, 1)
                     if isfield(config, 'REGISTRATION_METHOD')
 
                         % Register the daily image
-                        daily.rigid = RegisterImages(reference, daily, ...
+                        daily.rigid = RigidRegister(reference, daily, ...
                             'method', config.REGISTRATION_METHOD, ...
                             'levels', config.REGISTRATION_LEVELS, ...
                             'iterations', config.REGISTRATION_ITER, ...
