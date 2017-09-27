@@ -128,7 +128,7 @@ end
 config = ParseConfigOptions('config.txt');
 
 % Load Results .csv
-results = ParseExistingResults(config.RESULTS_CSV);
+results = ParseExistingResults(config.RESULTS_CSV, config);
 
 %% Start scanning for archives
 % Note beginning execution
