@@ -17,27 +17,29 @@ function ScanArchives()
 %   {1}:  Full path to patient archive _patient.xml.  However, if 
 %         the config option ANON_RESULTS is set to 1, will be empty.
 %   {2}:  SHA1 signature of _patient.xml file
-%   {3}:  MVCT Timestamp (ISO 8601)
+%   {3}:  MVCT Timestamp (MATLAB datenum)
 %   {4}:  MVCT UID
 %   {5}:  Plan Name
 %   {6}:  Scan Length (cm)
-%   {7}:  User Registered Pitch (degrees)
-%   {8}:  User Registered Yaw (degrees)
-%   {9}:  User Registered Roll (degrees)
-%   {10}: User Registered X Translation (cm)
-%   {11}: User Registered Y Translation (cm)
-%   {12}: User Registered Z Translation (cm)
-%   {13}: Tool Version
-%   {14}: Registration Method, if provided
-%   {15}: Re-Registered Pitch (degrees)
-%   {16}: Re-Registered Yaw (degrees)
-%   {17}: Re-Registered Roll (degrees)
-%   {18}: Re-Registered X Translation (cm)
-%   {19}: Re-Registered Y Translation (cm)
-%   {20}: Re-Registered Z Translation (cm)
-%   {21}: Similarity Metric, if provided
-%   {22}: User Registration Similarity
-%   {23}: Re-Registration Similarity
+%   {7}:  Time from scan to treatment (minutes)
+%   {8}:  Number of MVCT scans performed on same day
+%   {9}:  User Registered Pitch (degrees)
+%   {10}:  User Registered Yaw (degrees)
+%   {11}:  User Registered Roll (degrees)
+%   {12}: User Registered X Translation (cm)
+%   {13}: User Registered Y Translation (cm)
+%   {14}: User Registered Z Translation (cm)
+%   {15}: Tool Version
+%   {16}: Registration Method, if provided
+%   {17}: Re-Registered Pitch (degrees)
+%   {18}: Re-Registered Yaw (degrees)
+%   {19}: Re-Registered Roll (degrees)
+%   {20}: Re-Registered X Translation (cm)
+%   {21}: Re-Registered Y Translation (cm)
+%   {22}: Re-Registered Z Translation (cm)
+%   {23}: Similarity Metric, if provided
+%   {24}: User Registration Similarity
+%   {25}: Re-Registration Similarity
 %
 % Author: Mark Geurts, mark.w.geurts@gmail.com
 % Copyright (C) 2017 University of Wisconsin Board of Regents
@@ -60,7 +62,7 @@ function ScanArchives()
 warning('off','all');
 
 % Set version handle
-version = '1.0.1';
+version = '1.0.2';
 
 % Determine path of current application
 [path, ~, ~] = fileparts(mfilename('fullpath'));
@@ -230,6 +232,9 @@ while i < size(folderList, 1)
         
             % Search for all MVCT scans in the archive
             scans = FindMVCTScans(path, name);
+            
+            % Search for all treatments in the archive
+            txs = FindTreatments(path, name);
         
         % If an error is thrown, catch
         catch exception
@@ -444,8 +449,8 @@ while i < size(folderList, 1)
                     fprintf(fid, '%s,', sha);
                     
                     % Write MVCT imtestamp in column 3
-                    fprintf(fid, '%s,', ...
-                        [scans{j}.date{k}, 'T', scans{j}.time{k}]);
+                    fprintf(fid, '%f,', datenum([scans{j}.date{k}, ...
+                        'T', scans{j}.time{k}], 'yyyymmddTHHMMSS'));
 
                     % Write MVCT UID in column 4
                     fprintf(fid, '%s,', scans{j}.scanUIDs{k});
@@ -456,23 +461,52 @@ while i < size(folderList, 1)
 
                     % Write scan length in column 6
                     fprintf(fid, '%f,', ...
-                    abs(diff(scans{j}.scanLengths(k,:))));
+                        abs(diff(scans{j}.scanLengths(k,:))));
 
-                    % Write user registration in columns 7-12
+                    % Write time to treatment in column 7, in minutes
+                    t = 0;
+                    for l = 1:length(txs{j}.date)
+                        d = datenum([txs{j}.date{l}, 'T', ...
+                            txs{j}.time{l}], 'yyyymmddTHHMMSS') - ...
+                            datenum([scans{j}.date{k}, 'T', ...
+                            scans{j}.time{k}], 'yyyymmddTHHMMSS');
+                        if d > 0 && d < t
+                            t = d;
+                        end
+                    end
+                    fprintf(fid, '%f,', t*24*60);
+                    clear t l d;
+                    
+                    % Write number of MVCT scans in column 8
+                    c = 1;
+                    for l = 1:length(scans{j}.date)
+                        if strcmp(scans{j}.date{k}, scans{j}.date{l})
+                            c = c + 1;
+                        end
+                    end
+                    for l = 1:length(txs{j}.date)
+                        if strcmp(scans{j}.date{k}, txs{j}.date{l})
+                            c = c - 1;
+                        end
+                    end
+                    fprintf(fid, '%f,', max(c, 1));
+                    clear c l;
+                
+                    % Write user registration in columns 9-14
                     fprintf(fid, '%f,%f,%f,%f,%f,%f,', ...
                         scans{j}.registration(k,:));
                     
-                    % Write version in column 13
+                    % Write version in column 15
                     fprintf(fid, '%s,', version);
                     
                     % If a new registration was performed
                     if isfield(daily, 'rigid')
 
-                        % Write registration method in column 14
+                        % Write registration method in column 16
                         fprintf(fid, '%s,', [config.REGISTRATION_METHOD, ...
                             '_', config.REGISTRATION_METRIC]);
 
-                        % Write new registration values in columns 15-20
+                        % Write new registration values in columns 17-22
                         fprintf(fid, '%f,%f,%f,%f,%f,%f,', ...
                             daily.rigid);
                     end
@@ -480,17 +514,17 @@ while i < size(folderList, 1)
                     % If a similarity metric was calculated
                     if isfield(daily, 'user_similarity')
                         
-                        % Write similarity metric in column 21
+                        % Write similarity metric in column 23
                         fprintf(fid, '%s,', config.SIMILARITY_METRIC);
                         
-                        % Write user metric in column 22
+                        % Write user metric in column 24
                         fprintf(fid, '%f,', daily.user_similarity);
                     end
 
                     % If a new similarity metric was calculated
                     if isfield(daily, 're_similarity')
                         
-                        % Write user metric in column 23
+                        % Write user metric in column 25
                         fprintf(fid, '%f,', daily.re_similarity);
                     end
 
@@ -527,7 +561,7 @@ while i < size(folderList, 1)
         end
         
         % Clear temporary variables
-        clear path name scans sha;
+        clear path name scans sha txs;
     end 
 end
 
