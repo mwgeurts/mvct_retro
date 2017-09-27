@@ -255,8 +255,22 @@ while i < size(folderList, 1)
             if isfield(config, 'REGISTRATION_METHOD') || ...
                     isfield(config, 'SIMILARITY_METRIC')
                 
-                % Load the planning CT
-                reference = LoadImage(path, name, scans{j}.planUID);
+                % Attempt to load plan
+                try
+                    
+                    % Load the planning CT
+                    reference = LoadImage(path, name, scans{j}.planUID);
+                    
+                % If an error is thrown, catch
+                catch exception
+                    
+                    % Report exception to error log
+                    Event(getReport(exception, 'extended', 'hyperlinks', ...
+                        'off'), 'CATCH');
+
+                    % Continue to next image set
+                    continue;
+                end
             end
             
             % Loop through each scan
