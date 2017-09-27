@@ -17,7 +17,7 @@ function ScanArchives()
 %   {1}:  Full path to patient archive _patient.xml.  However, if 
 %         the config option ANON_RESULTS is set to 1, will be empty.
 %   {2}:  SHA1 signature of _patient.xml file
-%	{3}:  Plan Name
+%   {3}:  MVCT Timestamp (ISO 8601)
 %   {4}:  MVCT UID
 %   {5}:  Plan Name
 %   {6}:  Scan Length (cm)
@@ -60,7 +60,7 @@ function ScanArchives()
 warning('off','all');
 
 % Set version handle
-version = '1.0.0';
+version = '1.0.1';
 
 % Determine path of current application
 [path, ~, ~] = fileparts(mfilename('fullpath'));
@@ -442,32 +442,37 @@ while i < size(folderList, 1)
 
                     % Write XML SHA1 signature in column 2
                     fprintf(fid, '%s,', sha);
+                    
+                    % Write MVCT imtestamp in column 3
+                    fprintf(fid, '%s,', ...
+                        [scans{j}.date{k}, 'T', scans{j}.time{k}]);
 
-                    % Write MVCT UID in column 3
+                    % Write MVCT UID in column 4
                     fprintf(fid, '%s,', scans{j}.scanUIDs{k});
 
-                    % Write plan name in column 4
+                    % Write plan name in column 5
                     fprintf(fid, '%s,', ...
                         strrep(scans{j}.planName, ',', ' '));
 
-                    % Write scan length in column 5
-                    fprintf(fid, '%f,', abs(diff(scans{j}.scanLengths(k,:))));
+                    % Write scan length in column 6
+                    fprintf(fid, '%f,', ...
+                    abs(diff(scans{j}.scanLengths(k,:))));
 
-                    % Write user registration in columns 6-11
+                    % Write user registration in columns 7-12
                     fprintf(fid, '%f,%f,%f,%f,%f,%f,', ...
                         scans{j}.registration(k,:));
                     
-                    % Write version in column 12
+                    % Write version in column 13
                     fprintf(fid, '%s,', version);
                     
                     % If a new registration was performed
                     if isfield(daily, 'rigid')
 
-                        % Write registration method in column 13
+                        % Write registration method in column 14
                         fprintf(fid, '%s,', [config.REGISTRATION_METHOD, ...
                             '_', config.REGISTRATION_METRIC]);
 
-                        % Write new registration values in columns 14-19
+                        % Write new registration values in columns 15-20
                         fprintf(fid, '%f,%f,%f,%f,%f,%f,', ...
                             daily.rigid);
                     end
@@ -475,17 +480,17 @@ while i < size(folderList, 1)
                     % If a similarity metric was calculated
                     if isfield(daily, 'user_similarity')
                         
-                        % Write similarity metric in column 20
+                        % Write similarity metric in column 21
                         fprintf(fid, '%s,', config.SIMILARITY_METRIC);
                         
-                        % Write user metric in column 21
+                        % Write user metric in column 22
                         fprintf(fid, '%f,', daily.user_similarity);
                     end
 
                     % If a new similarity metric was calculated
                     if isfield(daily, 're_similarity')
                         
-                        % Write user metric in column 22
+                        % Write user metric in column 23
                         fprintf(fid, '%f,', daily.re_similarity);
                     end
 
