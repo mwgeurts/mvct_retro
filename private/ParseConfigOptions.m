@@ -68,6 +68,12 @@ else
     config.REGISTER_BONE = false;
 end
 
+if isfield(config, 'ALLOW_ROTATIONS')
+    config.ALLOW_ROTATIONS = logical(str2double(config.ALLOW_ROTATIONS));
+else
+    config.ALLOW_ROTATIONS = true;
+end
+
 if isfield(config, 'REGISTRATION_LEVELS')
     config.REGISTRATION_LEVELS = str2double(config.REGISTRATION_LEVELS);
 else

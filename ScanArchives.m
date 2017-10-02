@@ -62,7 +62,7 @@ function ScanArchives()
 warning('off','all');
 
 % Set version handle
-version = '1.0.3';
+version = '1.0.4';
 
 % Determine path of current application
 [path, ~, ~] = fileparts(mfilename('fullpath'));
@@ -334,7 +334,8 @@ while i < size(folderList, 1)
                             'levels', config.REGISTRATION_LEVELS, ...
                             'iterations', config.REGISTRATION_ITER, ...
                             'metric', config.REGISTRATION_METRIC, ...
-                            'bone', config.REGISTER_BONE);
+                            'bone', config.REGISTER_BONE, ...
+                            'rotations', config.ALLOW_ROTATIONS);
                     end
                     
                     % If a similarity metric is set
