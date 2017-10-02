@@ -350,7 +350,7 @@ while i < size(folderList, 1)
                         % Merge the daily image to the reference image
                         % coordinates using the user
                         m = MergeImages(reference, daily, ...
-                            daily.registration);
+                            scans{j}.registration(k,:));
 
                         % Find only the slices that correspond to the
                         % MVCT
