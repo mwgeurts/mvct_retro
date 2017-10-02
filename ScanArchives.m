@@ -484,7 +484,7 @@ while i < size(folderList, 1)
                             txs{j}.time{l}], 'yyyymmddTHHMMSS') - ...
                             datenum([scans{j}.date{k}, 'T', ...
                             scans{j}.time{k}], 'yyyymmddTHHMMSS');
-                        if d > 0 && d < t
+                        if (d > 0 && d < 1) && (t == 0 || d < t)
                             t = d;
                         end
                     end
