@@ -50,7 +50,7 @@ similarity columns will only be filled out if set in `config.txt`.
 |--------|-------|-------|
 | 1 | Full path to patient archive |
 | 2 |  SHA1 signature of patient XML file |
-| 3 |  MVCT timestamp | MATLAB datenum |
+| 3 |  MVCT timestamp | [datenum](https://www.mathworks.com/help/matlab/ref/datenum.html) |
 | 4 |  MVCT UID |  |
 | 5 |  Plan name |  |
 | 6 |  Scan length | cm |
