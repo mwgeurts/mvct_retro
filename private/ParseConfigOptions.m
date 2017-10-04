@@ -55,6 +55,19 @@ clear c i fid;
 Event(sprintf('Configuration options loaded successfully in %0.3f seconds', ...
     toc(t)));
 
+% Remove similarity or registration inputs if they are invalid
+if isfield(config, 'REGISTRATION_METHOD') && ...
+        ~strcmp(config.REGISTRATION_METHOD, 'MATLAB') && ...
+        ~strcmp(config.REGISTRATION_METHOD, 'PLASTIMATCH')
+    config = rmfield(config, 'REGISTRATION_METHOD');
+end
+
+if isfield(config, 'SIMILARITY_METRIC') && ...
+        ~strcmp(config.REGISTRATION_METHOD, 'SSI') && ...
+        ~strcmp(config.REGISTRATION_METHOD, 'MSE')
+    config = rmfield(config, 'SIMILARITY_METRIC');
+end
+
 % Reformat numerical and logical inputs
 if isfield(config, 'ANON_RESULTS')
     config.ANON_RESULTS = logical(str2double(config.ANON_RESULTS));
