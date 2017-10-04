@@ -48,8 +48,8 @@ similarity columns will only be filled out if set in `config.txt`.
 
 | Column | Value |
 |--------|-------|
-| 1 | Full path to patient archive _patient.xml.  However, if the config option ANON_RESULTS is set to 1, will be empty. |
-| 2 |  SHA1 signature of _patient.xml file |
+| 1 | Full path to patient archive |
+| 2 |  SHA1 signature of patient XML file |
 | 3 |  MVCT Timestamp (MATLAB datenum) |
 | 4 |  MVCT UID |
 | 5 |  Plan Name |
