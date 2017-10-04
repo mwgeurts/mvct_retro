@@ -37,7 +37,7 @@ The configuration file `config.txt` contains various settings that can be set pr
 | REGISTRATION_METRIC | `MI` | If `REGISTRATION_METHOD` is provided, the metric used to re-register the images. Can be `MSE`, `MI`, or (plastimatch only) `GM`. |
 | REGISTRATION_LEVELS | `3` | If `REGISTRATION_METHOD` is provided, the number of downsampling levels to run during registration. |
 | REGISTRATION_ITER | `50` | If `REGISTRATION_METHOD` is provided, the maximum number of iterations to run at each level. |
-| REGISTER_BONE | '0' | If `REGISTRATION_METHOD` is provided, a flag indicating whether to re-register each MVCT scan using a bone-only algorithm `1` or to use the full image `0`. |
+| REGISTER_BONE | `0` | If `REGISTRATION_METHOD` is provided, a flag indicating whether to re-register each MVCT scan using a bone-only algorithm `1` or to use the full image `0`. |
 | ALLOW_ROTATIONS | `1` | If `REGISTRATION_METHOD` is provided, a flag indicating whether to include rotations `1` or only translations `0`. |
 | SIMILARITY_METRIC | `SSI` | If this configuration option is provided, the tool will calculate the image similarity of the user-registration merged MVCT. If provided with a `REGISTRATION_METHOD` option, the re-registered image similarity will also be reported. Values can be `MSE` or `SSI` |
 
