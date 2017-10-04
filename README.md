@@ -46,33 +46,33 @@ The configuration file `config.txt` contains various settings that can be set pr
 The RESULTS_CSV file contains the following columns. The registration and
 similarity columns will only be filled out if set in `config.txt`.
 
-| Column | Value |
-|--------|-------|
+| Column | Value | Units |
+|--------|-------|-------|
 | 1 | Full path to patient archive |
 | 2 |  SHA1 signature of patient XML file |
-| 3 |  MVCT Timestamp (MATLAB datenum) |
-| 4 |  MVCT UID |
-| 5 |  Plan Name |
-| 6 |  Scan Length (cm) |
-| 7 |  Time from scan to treatment (minutes) |
-| 8 |  Number of MVCT scans performed on same day |
-| 9 |  User Registered Pitch (degrees) |
-| 10 |  User Registered Yaw (degrees) |
-| 11 |  User Registered Roll (degrees) |
-| 12 | User Registered X Translation (cm) |
-| 13 | User Registered Y Translation (cm) |
-| 14 | User Registered Z Translation (cm) |
-| 15 | Tool Version |
-| 16 | Registration Method, if provided |
-| 17 | Re-Registered Pitch (degrees) |
-| 18 | Re-Registered Yaw (degrees) |
-| 19 | Re-Registered Roll (degrees) |
-| 20 | Re-Registered X Translation (cm) |
-| 21 | Re-Registered Y Translation (cm) |
-| 22 | Re-Registered Z Translation (cm) |
-| 23 | Similarity Metric, if provided |
-| 24 | User Registration Similarity |
-| 25 | Re-Registration Similarity |
+| 3 |  MVCT timestamp | MATLAB datenum |
+| 4 |  MVCT UID |  |
+| 5 |  Plan name |  |
+| 6 |  Scan length | cm |
+| 7 |  Time from scan to treatment | minutes |
+| 8 |  Number of MVCT scans performed on same day |  |
+| 9 |  User registered pitch | degrees |
+| 10 |  User registered yaw | degrees |
+| 11 |  User registered roll | degrees |
+| 12 | User registered x translation | cm |
+| 13 | User registered y translation | cm |
+| 14 | User registered z translation | cm |
+| 15 | Tool version |  |
+| 16 | Registration method, if provided |  |
+| 17 | Re-registered pitch | degrees |
+| 18 | Re-registered yaw | degrees |
+| 19 | Re-registered roll | degrees |
+| 20 | Re-registered x translation | cm |
+| 21 | Re-registered y translation | cm |
+| 22 | Re-registered z translation | cm |
+| 23 | Similarity metric, if provided |  |
+| 24 | User registration similarity |  |
+| 25 | Re-registration similarity |  |
 
 ## Compatibility and Requirements
 
